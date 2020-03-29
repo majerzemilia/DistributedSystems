@@ -13,22 +13,32 @@ public class Agency {
     private static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
     private static void initialize() throws IOException, TimeoutException {
-        // connection & channel
+        initializeConnectionAndChannel();
+        initializeExchange();
+        initializeAgencyName();
+        initializeQueueForConfirmations();
+    }
+
+    private static void initializeConnectionAndChannel() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
         channel = connection.createChannel();
+    }
 
-        // exchange
+    private static void initializeExchange() throws IOException {
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+    }
 
+    private static void initializeAgencyName() throws IOException {
         System.out.println("Enter name of your agency");
         name = br.readLine();
         System.out.println("Welcome!\nTypes of services:\npassenger transport - P\ncargo transport - C\nputting satellite on orbit - O");
+    }
 
-        //queue for confirmations
+    private static void initializeQueueForConfirmations() throws IOException {
         channel.queueDeclare(name, true,true,true, null);
-        channel.queueBind(name, EXCHANGE_NAME, name);
+        channel.queueBind(name, EXCHANGE_NAME, "agency." + name);
     }
 
     private static void listenForConfirmation() throws IOException {
@@ -44,24 +54,27 @@ public class Agency {
     }
 
     private static void makeCommissions() throws IOException {
-
         String numberOfCommission;
+        TypeOfService type;
+        String message;
         while (true) {
-            // read msg
-            System.out.println("Enter type of commission (one letter):");
-            String key = br.readLine();
+            type = askForValidTypeOfService();
             System.out.println("Enter number of commission:");
             numberOfCommission = br.readLine();
             System.out.println("Enter additional info: ");
-            String message = name + "\n" +  numberOfCommission +"\n" + br.readLine();
-            // break condition
-            if ("exit".equals(message)) {
-                break;
-            }
+            message = name + "\n" +  numberOfCommission +"\n" + br.readLine();
             // publish
-            channel.basicPublish(EXCHANGE_NAME, key, null, message.getBytes("UTF-8"));
-            System.out.println("Sent: " + message);
+            channel.basicPublish(EXCHANGE_NAME, type.toString(), null, message.getBytes("UTF-8"));
         }
+    }
+
+    private static TypeOfService askForValidTypeOfService() throws IOException {
+        TypeOfService type = null;
+        while(type == null){
+            System.out.println("Enter valid type of service (one letter):");
+            type = TypeOfService.decodeTypeOfService(br.readLine());
+        }
+        return type;
     }
 
 
@@ -71,7 +84,7 @@ public class Agency {
         System.out.println("Agency");
         initialize();
 
-        Thread t1 = new Thread(new Runnable() {
+        Thread commissionsThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -82,7 +95,7 @@ public class Agency {
             }
         });
         Thread.sleep(300);
-        Thread t2 = new Thread(new Runnable() {
+        Thread confirmationsThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -92,10 +105,10 @@ public class Agency {
                 }
             }
         });
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        commissionsThread.start();
+        confirmationsThread.start();
+        commissionsThread.join();
+        confirmationsThread.join();
     }
 
 }
