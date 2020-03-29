@@ -57,8 +57,8 @@ public class Carrier {
         channel.queueDeclare(secondTypeOfService.toString(), true, false, false, null);
         channel.queueBind(secondTypeOfService.toString(), EXCHANGE_NAME, secondTypeOfService.toString());
         channel.basicQos(1);
-        channel.queueDeclare(name, true,true,true, null); //queue for admin mode
-        channel.queueBind(name, EXCHANGE_NAME, "carrier." + name);
+        channel.queueDeclare("adminmode" + name, true, true, true, null).getQueue(); //queue for admin mode
+        channel.queueBind("adminmode" + name, EXCHANGE_NAME, "carriers");
     }
 
     private static void listenForCommissions() throws IOException {
@@ -66,17 +66,28 @@ public class Carrier {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                String agencyName = message.substring(0, message.indexOf("\n"));
-                String numberOfCommission = message.substring(message.indexOf("\n")+1, message.indexOf("\n", message.indexOf("\n")+1));
-                String returnMessage = "Commission number " + numberOfCommission + " was successfully realized by company " + name;
-                channel.basicAck(envelope.getDeliveryTag(), false);
-                channel.basicPublish(EXCHANGE_NAME, "agency."+ agencyName, null, returnMessage.getBytes("UTF-8"));
-                System.out.println("Realized commission from agency: " + agencyName + " number: " + numberOfCommission);
+                if(message.charAt(0) == 'A') handleAgencyMessage(message, envelope);
+                else handleAdminMessage(message, envelope);
             }
         };
         System.out.println("Waiting for commissions...");
         channel.basicConsume(firstTypeOfService.toString(), false, consumer);
         channel.basicConsume(secondTypeOfService.toString(), false, consumer);
+        channel.basicConsume("adminmode" + name, false, consumer);
+    }
+
+    private static void handleAgencyMessage(String message, Envelope envelope) throws IOException {
+        String agencyName = message.substring(1, message.indexOf("\n"));
+        String numberOfCommission = message.substring(message.indexOf("\n")+1, message.indexOf("\n", message.indexOf("\n")+1));
+        String returnMessage = "C" + "Commission number " + numberOfCommission + " was successfully realized by company " + name;
+        channel.basicAck(envelope.getDeliveryTag(), false);
+        channel.basicPublish(EXCHANGE_NAME, "agency."+ agencyName, null, returnMessage.getBytes("UTF-8"));
+        System.out.println("Realized commission from agency: " + agencyName + " number: " + numberOfCommission);
+    }
+
+    private static void handleAdminMessage(String message, Envelope envelope) throws IOException {
+        System.out.println("Received message from administrator: " + message.substring(1));
+        channel.basicAck(envelope.getDeliveryTag(), false);
     }
 
     public static void main(String[] argv) throws Exception {

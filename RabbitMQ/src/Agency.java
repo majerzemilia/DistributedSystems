@@ -16,7 +16,7 @@ public class Agency {
         initializeConnectionAndChannel();
         initializeExchange();
         initializeAgencyName();
-        initializeQueueForConfirmations();
+        initializeQueues();
     }
 
     private static void initializeConnectionAndChannel() throws IOException, TimeoutException {
@@ -36,21 +36,24 @@ public class Agency {
         System.out.println("Welcome!\nTypes of services:\npassenger transport - P\ncargo transport - C\nputting satellite on orbit - O");
     }
 
-    private static void initializeQueueForConfirmations() throws IOException {
+    private static void initializeQueues() throws IOException {
         channel.queueDeclare(name, true,true,true, null);
         channel.queueBind(name, EXCHANGE_NAME, "agency." + name);
+        channel.queueDeclare("adminmode" + name, true, true, true, null).getQueue(); //queue for admin mode
+        channel.queueBind("adminmode" + name, EXCHANGE_NAME, "agencies");
     }
 
-    private static void listenForConfirmation() throws IOException {
+    private static void listen() throws IOException {
         Consumer consumer = new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 channel.basicAck(envelope.getDeliveryTag(), false);
-                System.out.println("Received: " + message);
+                System.out.println("Received: " + message.substring(1));
             }
         };
         channel.basicConsume(name, false, consumer);
+        channel.basicConsume("adminmode" + name, false, consumer);
     }
 
     private static void makeCommissions() throws IOException {
@@ -62,7 +65,7 @@ public class Agency {
             System.out.println("Enter number of commission:");
             numberOfCommission = br.readLine();
             System.out.println("Enter additional info: ");
-            message = name + "\n" +  numberOfCommission +"\n" + br.readLine();
+            message = "A" + name + "\n" +  numberOfCommission +"\n" + br.readLine();
             // publish
             channel.basicPublish(EXCHANGE_NAME, type.toString(), null, message.getBytes("UTF-8"));
         }
@@ -99,7 +102,7 @@ public class Agency {
             @Override
             public void run() {
                 try {
-                    listenForConfirmation();
+                    listen();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
