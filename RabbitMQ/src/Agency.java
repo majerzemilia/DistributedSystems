@@ -39,7 +39,7 @@ public class Agency {
     private static void initializeQueues() throws IOException {
         channel.queueDeclare(name, true,true,true, null);
         channel.queueBind(name, EXCHANGE_NAME, "agency." + name);
-        channel.queueDeclare("adminmode" + name, true, true, true, null).getQueue(); //queue for admin mode
+        channel.queueDeclare("adminmode" + name, true, true, true, null);//queue for admin mode
         channel.queueBind("adminmode" + name, EXCHANGE_NAME, "agencies");
     }
 
@@ -49,7 +49,7 @@ public class Agency {
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 channel.basicAck(envelope.getDeliveryTag(), false);
-                System.out.println("Received: " + message.substring(1));
+                System.out.println("Received: " + message);
             }
         };
         channel.basicConsume(name, false, consumer);
@@ -65,7 +65,7 @@ public class Agency {
             System.out.println("Enter number of commission:");
             numberOfCommission = br.readLine();
             System.out.println("Enter additional info: ");
-            message = "A" + name + "\n" +  numberOfCommission +"\n" + br.readLine();
+            message = "New commission:\n" + name + "\n" +  numberOfCommission +"\n" + br.readLine();
             // publish
             channel.basicPublish(EXCHANGE_NAME, type.toString(), null, message.getBytes("UTF-8"));
         }

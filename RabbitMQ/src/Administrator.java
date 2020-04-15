@@ -3,7 +3,6 @@ import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeoutException;
 
 public class Administrator {
@@ -40,7 +39,7 @@ public class Administrator {
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 channel.basicAck(envelope.getDeliveryTag(), false);
-                System.out.println("Received: " + message.substring(1));
+                System.out.println("Received: " + message);
             }
         };
         channel.basicConsume("admin", false, consumer);
@@ -51,9 +50,8 @@ public class Administrator {
         String message;
         while (true) {
             String type = askForValidReceiversType();
-            //System.out.println(type);
             System.out.println("Enter message:");
-            message = "B" + br.readLine();
+            message = br.readLine();
             // publish
             publishMessage(message, type);
         }

@@ -66,7 +66,7 @@ public class Carrier {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                if(message.charAt(0) == 'A') handleAgencyMessage(message, envelope);
+                if(message.length() >= 14 && message.substring(0, 14).equals("New commission")) handleAgencyMessage(message, envelope);
                 else handleAdminMessage(message, envelope);
             }
         };
@@ -77,9 +77,13 @@ public class Carrier {
     }
 
     private static void handleAgencyMessage(String message, Envelope envelope) throws IOException {
-        String agencyName = message.substring(1, message.indexOf("\n"));
-        String numberOfCommission = message.substring(message.indexOf("\n")+1, message.indexOf("\n", message.indexOf("\n")+1));
-        String returnMessage = "C" + "Commission number " + numberOfCommission + " was successfully realized by company " + name;
+        int lastBlockIndex = message.indexOf("\n");
+        int currentBlockIndex = message.indexOf("\n", lastBlockIndex+1);
+        String agencyName = message.substring(lastBlockIndex + 1, currentBlockIndex);
+        lastBlockIndex = currentBlockIndex;
+        currentBlockIndex = message.indexOf("\n", lastBlockIndex+1);
+        String numberOfCommission = message.substring(lastBlockIndex + 1, currentBlockIndex);
+        String returnMessage = "Realized commission:\n" + "Commission number " + numberOfCommission + " was successfully realized by company " + name;
         channel.basicAck(envelope.getDeliveryTag(), false);
         channel.basicPublish(EXCHANGE_NAME, "agency."+ agencyName, null, returnMessage.getBytes("UTF-8"));
         System.out.println("Realized commission from agency: " + agencyName + " number: " + numberOfCommission);
