@@ -32,7 +32,7 @@ public class Carrier {
 
     private void initializeExchange() throws IOException {
         channel.exchangeDeclare(SYSTEM_EXCHANGE, BuiltinExchangeType.TOPIC);
-        channel.exchangeDeclare(ADMIN_MESSAGES_EXCHANGE, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_MESSAGES_EXCHANGE, BuiltinExchangeType.DIRECT);
     }
 
     private void initializeCarrierName() throws IOException {
@@ -68,7 +68,13 @@ public class Carrier {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                if(message.length() >= 14 && message.substring(0, 14).equals("New commission")) handleAgencyMessage(message, envelope);
+                if(message.length() >= 14 && message.substring(0, 14).equals("New commission")) {
+                    try {
+                        handleAgencyMessage(message, envelope);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 else handleAdminMessage(message, envelope);
             }
         };
@@ -78,13 +84,14 @@ public class Carrier {
         channel.basicConsume(name, false, consumer);
     }
 
-    private void handleAgencyMessage(String message, Envelope envelope) throws IOException {
+    private void handleAgencyMessage(String message, Envelope envelope) throws IOException, InterruptedException {
         int lastBlockIndex = message.indexOf("\n");
         int currentBlockIndex = message.indexOf("\n", lastBlockIndex+1);
         String agencyName = message.substring(lastBlockIndex + 1, currentBlockIndex);
         lastBlockIndex = currentBlockIndex;
         currentBlockIndex = message.indexOf("\n", lastBlockIndex+1);
         String numberOfCommission = message.substring(lastBlockIndex + 1, currentBlockIndex);
+        Thread.sleep(3000);
         String returnMessage = "Realized commission:\n" + "Commission number " + numberOfCommission + " was successfully realized by company " + name;
         channel.basicAck(envelope.getDeliveryTag(), false);
         channel.basicPublish(SYSTEM_EXCHANGE, "agency."+ agencyName, null, returnMessage.getBytes("UTF-8"));

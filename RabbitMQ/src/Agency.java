@@ -29,7 +29,7 @@ public class Agency {
 
     private void initializeExchange() throws IOException {
         channel.exchangeDeclare(SYSTEM_EXCHANGE, BuiltinExchangeType.TOPIC);
-        channel.exchangeDeclare(ADMIN_MESSAGES_EXCHANGE, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_MESSAGES_EXCHANGE, BuiltinExchangeType.DIRECT);
     }
 
     private void initializeAgencyName() throws IOException {

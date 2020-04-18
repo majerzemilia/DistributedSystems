@@ -27,7 +27,7 @@ public class Administrator {
 
     private void initializeExchange() throws IOException {
         channel.exchangeDeclare(SYSTEM_EXCHANGE, BuiltinExchangeType.TOPIC);
-        channel.exchangeDeclare(ADMIN_MESSAGES_EXCHANGE, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_MESSAGES_EXCHANGE, BuiltinExchangeType.DIRECT);
     }
 
     private void initializeAdminQueue() throws IOException {
