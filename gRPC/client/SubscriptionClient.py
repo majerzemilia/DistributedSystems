@@ -20,7 +20,7 @@ def initialize():
     initialize_category()
     print('Waiting for server...')
     wait_for_connection()
-    print('Ready to send meetings\'s info!\n')
+    print('Ready to send meetings\' info!\n')
     make_subscription()
 
 
@@ -28,7 +28,7 @@ def wait_for_connection():
     global is_alive
     while not is_alive:
         try:
-            time.sleep(0.1)
+            time.sleep(1)
             _ = stub.Ping(subscription_pb2.PingMsg())
         except:
             continue
@@ -66,7 +66,7 @@ def make_subscription():
             print(f)
     except grpc._channel._Rendezvous:
         is_alive = False
-        print('Cannot reach server. Enter reconnecting...')
+        print('Cannot reach server. Begin reconnecting...')
         reconnect()
     except KeyboardInterrupt:
         print('Goodbye!')
