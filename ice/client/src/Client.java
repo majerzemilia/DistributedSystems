@@ -141,7 +141,7 @@ public class Client {
                 System.out.println("Enter mililitres of milk:\n");
                 int mililitres = new Integer(in.readLine());
                 try {
-                    machine.addSugar(mililitres);
+                    machine.addMilk(mililitres);
                 } catch (NoIngredientsError | IsOffError | OutOfRangeError error) {
                     printError(error);
                 }
@@ -260,12 +260,10 @@ public class Client {
             ObjectPrx coffeeMachineObj = communicator.stringToProxy("coffeeMachine:default -p 10000");
             ObjectPrx teaMachineObj = communicator.stringToProxy("teaMachine:default -p 10000");
 
-            FridgePrx fridge = FridgePrx.checkedCast(fridgeObj);
-            LampPrx lamp = LampPrx.checkedCast(lampObj);
-            CoffeeMachinePrx coffeeMachine = CoffeeMachinePrx.checkedCast(coffeeMachineObj);
-            TeaMachinePrx teaMachine = TeaMachinePrx.checkedCast(teaMachineObj);
-            if (fridge == null || lamp == null || coffeeMachine == null || teaMachine == null)
-                throw new java.lang.Error("Invalid proxy");
+            FridgePrx fridge = null;
+            LampPrx lamp = null;
+            CoffeeMachinePrx coffeeMachine = null;
+            TeaMachinePrx teaMachine = null;
 
             int device = -1;
             int action = -1;
@@ -276,21 +274,37 @@ public class Client {
                         device = chooseDevice();
                     }
                     while(device == 1){
+                        if(fridge == null){
+                            fridge = FridgePrx.checkedCast(fridgeObj);
+                            if(fridge == null) throw new java.lang.Error("Invalid proxy");
+                        }
                         action = chooseFridgeAction();
                         if(action == 0) device = 0;
                         else makeFridgeAction(fridge, action);
                     }
                     while(device == 2){
+                        if(lamp == null){
+                            lamp = LampPrx.checkedCast(lampObj);
+                            if(lamp == null) throw new java.lang.Error("Invalid proxy");
+                        }
                         action = chooseLampAction();
                         if(action == 0) device = 0;
                         else makeLampAction(lamp, action);
                     }
                     while(device == 3){
+                        if(coffeeMachine == null){
+                            coffeeMachine = CoffeeMachinePrx.checkedCast(coffeeMachineObj);
+                            if(coffeeMachine == null) throw new java.lang.Error("Invalid proxy");
+                        }
                         action = chooseCoffeeMachineAction();
                         if(action == 0) device = 0;
                         else makeCoffeeMachineAction(coffeeMachine, action);
                     }
                     while(device == 4){
+                        if(teaMachine == null){
+                            teaMachine = TeaMachinePrx.checkedCast(teaMachineObj);
+                            if(teaMachine == null) throw new java.lang.Error("Invalid proxy");
+                        }
                         action = chooseTeaMachineAction();
                         if(action == 0) device = 0;
                         else makeTeaMachineAction(teaMachine, action);

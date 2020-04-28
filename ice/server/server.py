@@ -85,9 +85,9 @@ class DrinkMachineI(SmartHouse.IDrinkMachine, DeviceI):
 
     def addMilk(self, mililitres, current=None):
         check_if_off(self.power_state)
-        if mililitres not in range(60, 181):
+        if mililitres not in range(10, 181):
             time_of_day = generate_time_of_the_day()
-            raise SmartHouse.OutOfRangeError(time_of_day, "Amount of milk out of range 60 - 180 ml")
+            raise SmartHouse.OutOfRangeError(time_of_day, "Amount of milk out of range 10 - 180 ml")
         if self.milk_amount - mililitres < 0:
             time_of_day = generate_time_of_the_day()
             raise SmartHouse.NoIngredientsError(time_of_day, "Not enough milk in machine")
@@ -123,7 +123,7 @@ class TeaMachineI(SmartHouse.TeaMachine, DrinkMachineI, DeviceI):
         self.water_amount = 400
         self.tea_amount = 400
 
-    def makeTea(self, coffee_type, current=None):
+    def makeTea(self, tea_type, current=None):
         check_if_off(self.power_state)
         if self.water_amount - 150 < 0:
             time_of_day = generate_time_of_the_day()
@@ -148,6 +148,7 @@ class ServerServantLocator(Ice.ServantLocator):
         name = current.id.name
         if name in self.servants.keys():
             return self.servants[name]
+        print('New servant: ' + name)
         servant = None
         if name == "fridge":
             servant = FridgeI()
