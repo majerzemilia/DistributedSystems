@@ -11,7 +11,6 @@ public class Client {
     private static int chooseDevice() throws IOException {
         System.out.println("Available devices:\nFridge - 1\nLamp - 2\nCoffeeMachine - 3\nTeaMachine - 4\n");
         int device = -1;
-        String line = null;
         while(device == -1){
             device = new Integer(in.readLine());
             if(device > 4 || device < 1) device = -1;
