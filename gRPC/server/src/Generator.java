@@ -15,7 +15,7 @@ public class Generator {
     public Generator(){
         names.add("Great event");
         names.add("Unforgettable event");
-        names.add("What an ivent");
+        names.add("What an event");
         categories.add(Category.BUSINESS);
         categories.add(Category.FASHION);
         categories.add(Category.IT);
