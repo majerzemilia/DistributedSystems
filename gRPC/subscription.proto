@@ -21,7 +21,7 @@ enum Category {
 	IT = 2;
 	MUSIC = 3;
 	SPORT = 4;	
- }
+}
 
 message Event {
   string name = 1;
