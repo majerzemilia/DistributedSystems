@@ -17,7 +17,7 @@ public class Executor implements Watcher, Runnable, DataMonitor.DataMonitorListe
         this.znode = "/z";
         this.exec = exec;
         zk = new ZooKeeper(hostPort, 3000, this);
-        dm = new DataMonitor(zk, znode, null, this);
+        dm = new DataMonitor(zk, znode, this);
     }
 
     public static void main(String[] args) {
@@ -82,6 +82,7 @@ public class Executor implements Watcher, Runnable, DataMonitor.DataMonitorListe
                 }
             }
         } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -91,20 +92,10 @@ public class Executor implements Watcher, Runnable, DataMonitor.DataMonitorListe
         }
     }
 
-    public void exists(byte[] data) {
-        if (data == null) {
+    public void handleProgram(boolean exists) {
+        if (!exists) {
             if (child != null) {
                 System.out.println("Killing process");
-                child.destroy();
-                try {
-                    child.waitFor();
-                } catch (InterruptedException e) {
-                }
-            }
-            child = null;
-        } else {
-            if (child != null) {
-                System.out.println("Stopping child");
                 child.destroy();
                 try {
                     child.waitFor();
@@ -112,6 +103,8 @@ public class Executor implements Watcher, Runnable, DataMonitor.DataMonitorListe
                     e.printStackTrace();
                 }
             }
+            child = null;
+        } else {
             try {
                 System.out.println("Starting child");
                 child = Runtime.getRuntime().exec(exec);

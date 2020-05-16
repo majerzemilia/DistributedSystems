@@ -9,23 +9,20 @@ public class DataMonitor implements Watcher, AsyncCallback.StatCallback, AsyncCa
 
     private final ZooKeeper zk;
     private final String znode;
-    private final Watcher chainedWatcher;
     boolean dead;
     private final DataMonitorListener listener;
-    private byte prevData[];
     private int childrenCount;
 
-    public DataMonitor(ZooKeeper zk, String znode, Watcher chainedWatcher, DataMonitorListener listener) {
+    public DataMonitor(ZooKeeper zk, String znode, DataMonitorListener listener) {
         this.zk = zk;
         this.znode = znode;
-        this.chainedWatcher = chainedWatcher;
         this.listener = listener;
         this.childrenCount = 0;
         zk.exists(znode, true, this, null);
     }
 
     public interface DataMonitorListener {
-        void exists(byte data[]);
+        void handleProgram(boolean exists);
         void closing(int rc);
     }
 
@@ -50,9 +47,6 @@ public class DataMonitor implements Watcher, AsyncCallback.StatCallback, AsyncCa
                 zk.getChildren(znode, true, this, null);
             }
         }
-        /*(chainedWatcher != null) {
-            chainedWatcher.process(event);
-        }*/
     }
 
     @Override
@@ -74,21 +68,7 @@ public class DataMonitor implements Watcher, AsyncCallback.StatCallback, AsyncCa
                 zk.exists(znode, true, this, null);
                 return;
         }
-
-        byte b[] = null;
-        if (exists) {
-            try {
-                b = zk.getData(znode, false, null);
-            } catch (KeeperException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                return;
-            }
-        }
-        if ((b == null && b != prevData) || (b != null && !Arrays.equals(prevData, b))) {
-            listener.exists(b);
-            prevData = b;
-        }
+        listener.handleProgram(exists);
     }
 
     @Override
