@@ -59,9 +59,9 @@ public class Executor implements Watcher, Runnable, DataMonitor.DataMonitorListe
     }
 
     private void showStructure(String path){
-        System.out.println(path);
         try {
             List<String> children = zk.getChildren(path, false);
+            System.out.println(path);
             for(String child: children) showStructure(path + "/" + child);
         } catch (KeeperException.NoNodeException e){
             System.out.println("Node does not exist");

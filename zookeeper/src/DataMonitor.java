@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.zookeeper.*;;
@@ -19,6 +18,7 @@ public class DataMonitor implements Watcher, AsyncCallback.StatCallback, AsyncCa
         this.listener = listener;
         this.childrenCount = 0;
         zk.exists(znode, true, this, null);
+        zk.getChildren(znode, true, this, null);
     }
 
     public interface DataMonitorListener {
