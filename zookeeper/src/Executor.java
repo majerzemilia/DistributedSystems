@@ -28,21 +28,15 @@ public class Executor implements Watcher, Runnable, DataMonitor.DataMonitorListe
         String hostPort = args[0];
         String exec[] = new String[args.length - 1];
         System.arraycopy(args, 1, exec, 0, exec.length);
-        Executor executor = null;
         try {
-            executor = new Executor(hostPort, exec);
+            final Executor executor = new Executor(hostPort, exec);
+            new Thread(() -> {
+                executor.listenForCommands();
+            }).start();
+            executor.run();
         } catch (KeeperException | IOException e) {
             e.printStackTrace();
         }
-        Executor finalExecutor = executor;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                assert finalExecutor != null;
-                finalExecutor.listenForCommands();
-            }
-        }).start();
-        executor.run();
     }
 
     private void listenForCommands(){
